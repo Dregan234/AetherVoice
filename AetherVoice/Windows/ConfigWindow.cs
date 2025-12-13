@@ -122,6 +122,22 @@ public class ConfigWindow : Window, IDisposable
 
     private void DrawGeneralTab()
     {
+        // Feature Toggles
+        ImGui.Text("Features:");
+        var enableNael = configuration.EnableNaelQuotes;
+        if (ImGui.Checkbox("Enable Nael Quotes", ref enableNael))
+        {
+            configuration.EnableNaelQuotes = enableNael;
+        }
+
+        var enableCustom = configuration.EnableCustomTriggers;
+        if (ImGui.Checkbox("Enable Custom Triggers", ref enableCustom))
+        {
+            configuration.EnableCustomTriggers = enableCustom;
+        }
+
+        ImGui.Separator();
+
         // Audio Source Selection
         ImGui.Text("Audio Source:");
         if (ImGui.Checkbox("Use Text-to-Speech", ref useTTS))

@@ -139,6 +139,16 @@
         "Text_ja": "聖なる月より舞い降り、焼けた大地を踏みしめん!",
         "Text_chs": "由神圣之月降临,践踏燃烧之大地!"
       }
+    },
+    {
+      "ID": 6508,
+      "Text": {
+        "Text_de": "Unbeugsames Eisen, nimm Feuer und steige herab!",
+        "Text_en": "Unbending iron, take fire and descend!",
+        "Text_fr": "Fer inflexible, prends feu et descends !",
+        "Text_ja": "不屈なる鉄よ、炎を纏いて降れ!",
+        "Text_chs": "不屈之铁啊,携火焰降临!"
+      }
     }
   ]
 }

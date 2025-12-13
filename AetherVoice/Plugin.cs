@@ -126,16 +126,22 @@ public sealed class Plugin : IDalamudPlugin
             if (payload is TextPayload { Text: not null } textPayload)
             {
                 // Check for Nael quotes first
-                var mechanic = IdentifyMechanic(textPayload.Text);
-                if (!string.IsNullOrEmpty(mechanic))
+                if (Configuration.EnableNaelQuotes)
                 {
-                    Log.Info($"Detected Nael quote from any source: {textPayload.Text}");
-                    ttsManager?.PlayMechanic(mechanic);
-                    return; // Don't check custom triggers if we matched a Nael quote
+                    var mechanic = IdentifyMechanic(textPayload.Text);
+                    if (!string.IsNullOrEmpty(mechanic))
+                    {
+                        Log.Info($"Detected Nael quote from any source: {textPayload.Text}");
+                        ttsManager?.PlayMechanic(mechanic);
+                        return; // Don't check custom triggers if we matched a Nael quote
+                    }
                 }
 
                 // Check for custom triggers
-                CheckCustomTriggers(textPayload.Text);
+                if (Configuration.EnableCustomTriggers)
+                {
+                    CheckCustomTriggers(textPayload.Text);
+                }
             }
         }
     }
@@ -219,7 +225,8 @@ public sealed class Plugin : IDalamudPlugin
             { GetQuote(6503), "DynamoDiveMeteorStream" },  // From hallowed moon I descend, a rain of stars to bring! (In & Dive & Spread)
             { GetQuote(6504), "DiveDynamoMeteorStream" },  // From on high I descend, the moon and stars to bring! (Dive & In & Spread)
             { GetQuote(6506), "DynamoChariotDive" }, // From hallowed moon I bare iron, in my descent to wield! (In & Out & Dive)
-            { GetQuote(6507), "DynamoDiveBeam" }     // From hallowed moon I descend, upon burning earth to tread! (In & Dive & Stack)
+            { GetQuote(6507), "DynamoDiveBeam" },     // From hallowed moon I descend, upon burning earth to tread! (In & Dive & Stack)
+            { GetQuote(6508), "ChariotBeamDive" }     // Unbending iron, take fire and descend! (Out & Stack & Dive)
         };
     }
 

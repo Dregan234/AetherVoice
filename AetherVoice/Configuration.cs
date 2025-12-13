@@ -10,6 +10,10 @@ public class Configuration : IPluginConfiguration
     public int Version { get; set; } = 1;
     public bool Enabled { get; set; } = true;
 
+    // Feature Toggles
+    public bool EnableNaelQuotes { get; set; } = true;
+    public bool EnableCustomTriggers { get; set; } = true;
+
     // TTS Settings
     public bool UseTTS { get; set; } = true;
     public bool UseSoundFiles { get; set; } = false;
