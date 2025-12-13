@@ -1,5 +1,9 @@
 # AetherVoice
 
+![Downloads](https://img.shields.io/github/downloads/Dregan234/AetherVoice/total?label=Downloads)
+![Stars](https://img.shields.io/github/stars/Dregan234/AetherVoice?style=social)
+![License](https://img.shields.io/github/license/Dregan234/AetherVoice)
+
 **Repository**: [https://github.com/Dregan234/AetherVoice](https://github.com/Dregan234/AetherVoice)
 
 A FFXIV Dalamud plugin that provides Text-to-Speech or custom sound file callouts for Nael deus Darnus mechanics in The Unending Coil of Bahamut (Ultimate), plus custom chat triggers for any content.
