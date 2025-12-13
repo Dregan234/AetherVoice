@@ -1,7 +1,7 @@
 using System;
 using System.Numerics;
-using System.Windows.Forms;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface.ImGuiFileDialog;
 using Dalamud.Interface.Windowing;
 
 namespace AetherVoice.Windows;
@@ -10,6 +10,7 @@ public class ConfigWindow : Window, IDisposable
 {
     private readonly Configuration configuration;
     private readonly Plugin plugin;
+    private readonly FileDialogManager fileDialogManager = new();
 
     private bool useTTS;
     private bool useSoundFiles;
@@ -64,6 +65,8 @@ public class ConfigWindow : Window, IDisposable
 
     public override void Draw()
     {
+        fileDialogManager.Draw();
+
         ImGui.Text("AetherVoice Configuration");
         ImGui.Separator();
 
@@ -173,17 +176,17 @@ public class ConfigWindow : Window, IDisposable
                 ImGui.SameLine();
                 if (ImGui.Button("Browse"))
                 {
-                    var dialog = new OpenFileDialog
-                    {
-                        Filter = "Audio Files (*.wav;*.mp3;*.ogg)|*.wav;*.mp3;*.ogg|All Files (*.*)|*.*",
-                        Title = "Select Sound File",
-                        CheckFileExists = true
-                    };
-
-                    if (dialog.ShowDialog() == DialogResult.OK)
-                    {
-                        mechanicSoundPaths[i] = dialog.FileName;
-                    }
+                    var fileIndex = i;
+                    fileDialogManager.OpenFileDialog(
+                        "Select Sound File",
+                        ".wav,.mp3,.ogg,.*",
+                        (success, path) =>
+                        {
+                            if (success && !string.IsNullOrEmpty(path))
+                            {
+                                mechanicSoundPaths[fileIndex] = path;
+                            }
+                        });
                 }
             }
 
@@ -212,17 +215,16 @@ public class ConfigWindow : Window, IDisposable
         ImGui.SameLine();
         if (ImGui.Button("Browse##new"))
         {
-            var dialog = new OpenFileDialog
-            {
-                Filter = "Audio Files (*.wav;*.mp3;*.ogg)|*.wav;*.mp3;*.ogg|All Files (*.*)|*.*",
-                Title = "Select Sound File",
-                CheckFileExists = true
-            };
-
-            if (dialog.ShowDialog() == DialogResult.OK)
-            {
-                newSoundPath = dialog.FileName;
-            }
+            fileDialogManager.OpenFileDialog(
+                "Select Sound File",
+                ".wav,.mp3,.ogg,.*",
+                (success, path) =>
+                {
+                    if (success && !string.IsNullOrEmpty(path))
+                    {
+                        newSoundPath = path;
+                    }
+                });
         }
 
         ImGui.Checkbox("Exact match (case-insensitive)", ref newUseExactMatch);
@@ -288,17 +290,17 @@ public class ConfigWindow : Window, IDisposable
             ImGui.SameLine();
             if (ImGui.Button($"Browse##{i}"))
             {
-                var dialog = new OpenFileDialog
-                {
-                    Filter = "Audio Files (*.wav;*.mp3;*.ogg)|*.wav;*.mp3;*.ogg|All Files (*.*)|*.*",
-                    Title = "Select Sound File",
-                    CheckFileExists = true
-                };
-
-                if (dialog.ShowDialog() == DialogResult.OK)
-                {
-                    trigger.SoundFilePath = dialog.FileName;
-                }
+                var triggerToUpdate = trigger;
+                fileDialogManager.OpenFileDialog(
+                    "Select Sound File",
+                    ".wav,.mp3,.ogg,.*",
+                    (success, path) =>
+                    {
+                        if (success && !string.IsNullOrEmpty(path))
+                        {
+                            triggerToUpdate.SoundFilePath = path;
+                        }
+                    });
             }
 
             bool exactMatch = trigger.UseExactMatch;
