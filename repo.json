@@ -5,7 +5,7 @@
     "Punchline": "Text-to-Speech callouts for UCOB mechanics and custom chat triggers",
     "Description": "Provides TTS or custom sound file callouts for Nael deus Darnus quotes in UCOB. Also supports custom chat triggers with personalized TTS responses or sound files for any content.",
     "InternalName": "AetherVoice",
-    "AssemblyVersion": "1.0.0.0",
+    "AssemblyVersion": "2.0.0.0",
     "RepoUrl": "https://github.com/Dregan234/AetherVoice",
     "ApplicableVersion": "any",
     "DalamudApiLevel": 13,
