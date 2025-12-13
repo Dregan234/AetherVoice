@@ -20,7 +20,7 @@ A FFXIV Dalamud plugin that provides Text-to-Speech or custom sound file callout
 2. Go to the **Experimental** tab
 3. Under **Custom Plugin Repositories**, paste this URL:
    ```
-   https://raw.githubusercontent.com/Dregan234/ffxiv-naeltts/main/repo.json
+   https://raw.githubusercontent.com/Dregan234/ffxiv-naeltts/refs/heads/main/repo.json
    ```
 4. Click the **+** button and **Save**
 5. Type `/xlplugins` to open the Plugin Installer
