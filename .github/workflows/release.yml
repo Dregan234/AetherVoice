@@ -30,38 +30,13 @@ jobs:
     - name: Build Release
       run: dotnet build NaelTTS/NaelTTS.csproj -c Release --no-restore
 
-    - name: Get version from tag
-      id: get_version
-      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-      shell: bash
-
     - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: ncipollo/release-action@v1
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref_name }}
+        artifacts: "NaelTTS/bin/Release/NaelTTS/latest.zip,NaelTTS/bin/Release/NaelTTS/NaelTTS.json"
+        allowUpdates: true
         draft: false
         prerelease: false
-
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./NaelTTS/bin/Release/NaelTTS/latest.zip
-        asset_name: NaelTTS.zip
-        asset_content_type: application/zip
-
-    - name: Upload Plugin JSON
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./NaelTTS/bin/Release/NaelTTS/NaelTTS.json
+        generateReleaseNotes: true
         asset_name: NaelTTS.json
         asset_content_type: application/json
