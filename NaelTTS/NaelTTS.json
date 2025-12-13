@@ -1,11 +1,11 @@
 {
-  "Author": "YourName",
+  "Author": "Dregan234",
   "Name": "Nael TTS",
   "Punchline": "Text-to-Speech callouts for Nael mechanics in UCOB",
   "Description": "Provides TTS or custom sound file callouts for Nael deus Darnus quotes. Supports custom text prompts like 'in out' or custom sound files for each mechanic.",
   "InternalName": "NaelTTS",
   "ApplicableVersion": "any",
-  "DalamudApiLevel": 10,
+  "DalamudApiLevel": 13,
   "LoadRequiredState": 0,
   "LoadSync": false,
   "CanUnloadAsync": false,

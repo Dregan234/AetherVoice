@@ -72,6 +72,7 @@ public sealed class Plugin : IDalamudPlugin
         // This adds a button to the plugin installer entry of this plugin which allows
         // toggling the display status of the configuration ui
         PluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUi;
+        PluginInterface.UiBuilder.OpenMainUi += ToggleConfigUi;
 
         ChatGui.ChatMessage += OnChatMessage;
 
@@ -202,6 +203,7 @@ public sealed class Plugin : IDalamudPlugin
         // Unregister all actions to not leak anything during disposal of plugin
         PluginInterface.UiBuilder.Draw -= WindowSystem.Draw;
         PluginInterface.UiBuilder.OpenConfigUi -= ToggleConfigUi;
+        PluginInterface.UiBuilder.OpenMainUi -= ToggleConfigUi;
 
         WindowSystem.RemoveAllWindows();
         ConfigWindow.Dispose();
