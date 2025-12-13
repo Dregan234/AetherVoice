@@ -1,0 +1,20 @@
+[
+  {
+    "Author": "Dregan234",
+    "Name": "Nael TTS",
+    "Punchline": "Text-to-Speech callouts for Nael mechanics in UCOB",
+    "Description": "Provides TTS or custom sound file callouts for Nael deus Darnus quotes. Supports custom text prompts like 'in out' or custom sound files for each mechanic.",
+    "InternalName": "NaelTTS",
+    "AssemblyVersion": "1.0.0.0",
+    "RepoUrl": "https://github.com/Dregan234/ffxiv-naeltts",
+    "ApplicableVersion": "any",
+    "DalamudApiLevel": 10,
+    "IsHide": false,
+    "IsTestingExclusive": false,
+    "DownloadCount": 0,
+    "LastUpdate": 0,
+    "DownloadLinkInstall": "https://github.com/Dregan234/ffxiv-naeltts/releases/latest/download/NaelTTS.zip",
+    "DownloadLinkUpdate": "https://github.com/Dregan234/ffxiv-naeltts/releases/latest/download/NaelTTS.zip",
+    "DownloadLinkTesting": "https://github.com/Dregan234/ffxiv-naeltts/releases/latest/download/NaelTTS.zip"
+  }
+]

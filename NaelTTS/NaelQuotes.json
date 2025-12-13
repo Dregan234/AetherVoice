@@ -1,0 +1,144 @@
+{
+  "Quotes": [
+    {
+      "ID": 6492,
+      "Text": {
+        "Text_de": "Vom Wirbel in die Weiten, Fleisch von meinem Fleische!",
+        "Text_en": "From on high I descend, the hallowed moon to call!",
+        "Text_fr": "De la lune et du ciel je tire ma puissance !",
+        "Text_ja": "月の輝き、我と共に……来たれ、メテオ!",
+        "Text_chs": "月之光辉,与吾同在……快来,陨石!"
+      }
+    },
+    {
+      "ID": 6493,
+      "Text": {
+        "Text_de": "Vom Wirbel zur Geburt, Fleisch von meinem Fleische!",
+        "Text_en": "From on high I descend, the iron path to walk!",
+        "Text_fr": "De la lune et de mon sang je tire ma puissance !",
+        "Text_ja": "月の輝き、我と共に……来たれ、鉄の雷槍!",
+        "Text_chs": "月之光辉,与吾同在……快来,铁之雷枪!"
+      }
+    },
+    {
+      "ID": 6494,
+      "Text": {
+        "Text_de": "Von der Geburt in die Weiten, Blut von meinem Blute!",
+        "Text_en": "Take fire, O hallowed moon!",
+        "Text_fr": "La lune demande le sang d'un sacrifice !",
+        "Text_ja": "炎を冠する満月よ!",
+        "Text_chs": "戴火焰之冠的满月哟!"
+      }
+    },
+    {
+      "ID": 6495,
+      "Text": {
+        "Text_de": "Von der Geburt zum Wirbel, Blut von meinem Blute!",
+        "Text_en": "Blazing path, lead me to iron rule!",
+        "Text_fr": "En suivant le fil du rasoir...",
+        "Text_ja": "炎の道よ、鉄の支配を導け!",
+        "Text_chs": "火焰之路啊,指引至铁之支配!"
+      }
+    },
+    {
+      "ID": 6496,
+      "Text": {
+        "Text_de": "Flügelschlag in die Weiten, Fleisch von meinem Fleische!",
+        "Text_en": "O hallowed moon, take fire and scorch my foes!",
+        "Text_fr": "Lune sacrée, brûle l'ennemi qui se dresse !",
+        "Text_ja": "聖なる月よ、炎となりて敵を焼け!",
+        "Text_chs": "神圣之月啊,化作火焰燃尽敌人!"
+      }
+    },
+    {
+      "ID": 6497,
+      "Text": {
+        "Text_de": "Flügelschlag zum Wirbel, Fleisch von meinem Fleische!",
+        "Text_en": "O hallowed moon, shine you the iron path!",
+        "Text_fr": "Lune sacrée, trace la voie que je dois suivre !",
+        "Text_ja": "聖なる月よ、鉄の道を照らせ!",
+        "Text_chs": "神圣之月啊,照亮铁之道路!"
+      }
+    },
+    {
+      "ID": 6500,
+      "Text": {
+        "Text_de": "Sterne am Himmel, Flügelschlag!",
+        "Text_en": "Unbending iron, descend with fiery edge!",
+        "Text_fr": "Que le fer inflexible frappe d'un tranchant enflammé !",
+        "Text_ja": "不屈なる鉄よ、炎の刃と共に降れ!",
+        "Text_chs": "不屈之铁啊,伴随火焰之刃降临吧!"
+      }
+    },
+    {
+      "ID": 6501,
+      "Text": {
+        "Text_de": "Flügelschlag zur Geburt!",
+        "Text_en": "Fleeting light! 'Neath the red moon, scorch you the earth!",
+        "Text_fr": "Lueur éphémère ! Que la lune rouge brûle la terre !",
+        "Text_ja": "移ろう光よ! 紅き月よ、大地を焼け!",
+        "Text_chs": "无常之光啊!红月啊,燃尽大地!"
+      }
+    },
+    {
+      "ID": 6502,
+      "Text": {
+        "Text_de": "Flügelschlag, Wirbel, Sterne am Himmel!",
+        "Text_en": "Fleeting light! Amid a rain of stars, exalt you the red moon!",
+        "Text_fr": "Lueur éphémère ! Sous la pluie d'étoiles, exalte la lune rouge !",
+        "Text_ja": "移ろう光よ! 星降る夜に、紅き月を称えよ!",
+        "Text_chs": "无常之光啊!繁星坠落之夜,赞颂红月!"
+      }
+    },
+    {
+      "ID": 6503,
+      "Text": {
+        "Text_de": "Wirbel, Flügelschlag, Sterne am Himmel!",
+        "Text_en": "From hallowed moon I descend, a rain of stars to bring!",
+        "Text_fr": "Je viens au nom de la lune sacrée pour faire tomber les étoiles !",
+        "Text_ja": "聖なる月より舞い降り、星の雨を降らせん!",
+        "Text_chs": "由神圣之月降临,降下星之雨!"
+      }
+    },
+    {
+      "ID": 6504,
+      "Text": {
+        "Text_de": "Aus den Weiten, durch die Geburt, zum Flügelschlag!",
+        "Text_en": "From on high I descend, the moon and stars to bring!",
+        "Text_fr": "Je viens depuis les cieux pour apporter lune et étoiles !",
+        "Text_ja": "天より舞い降り、月と星を従えん!",
+        "Text_chs": "由天而降,率月与星!"
+      }
+    },
+    {
+      "ID": 6505,
+      "Text": {
+        "Text_de": "Aus den Weiten, zum Flügelschlag, durch die Geburt!",
+        "Text_en": "Luminous hand, guide me to azure moon!",
+        "Text_fr": "Ô main lumineuse, guide-moi jusqu'à la lune d'azur !",
+        "Text_ja": "光の御手よ、蒼き月へ導け!",
+        "Text_chs": "光之御手啊,引导至苍月!"
+      }
+    },
+    {
+      "ID": 6506,
+      "Text": {
+        "Text_de": "Vom Wirbel, zum Flügelschlag, durch die Geburt!",
+        "Text_en": "From hallowed moon I bare iron, in my descent to wield!",
+        "Text_fr": "Au nom de la lune sacrée je brandis le fer depuis les cieux !",
+        "Text_ja": "聖なる月より鉄を帯び、降り立ちて振るわん!",
+        "Text_chs": "由神圣之月佩铁,降临后挥舞!"
+      }
+    },
+    {
+      "ID": 6507,
+      "Text": {
+        "Text_de": "Vom Wirbel, aus den Weiten, zum Flügelschlag!",
+        "Text_en": "From hallowed moon I descend, upon burning earth to tread!",
+        "Text_fr": "Je viens au nom de la lune sacrée pour fouler cette terre brûlante !",
+        "Text_ja": "聖なる月より舞い降り、焼けた大地を踏みしめん!",
+        "Text_chs": "由神圣之月降临,践踏燃烧之大地!"
+      }
+    }
+  ]
+}
