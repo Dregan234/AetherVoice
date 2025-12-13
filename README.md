@@ -2,7 +2,6 @@
 
 ![Downloads](https://img.shields.io/github/downloads/Dregan234/AetherVoice/total?label=Downloads)
 ![Stars](https://img.shields.io/github/stars/Dregan234/AetherVoice?style=social)
-![License](https://img.shields.io/github/license/Dregan234/AetherVoice)
 
 **Repository**: [https://github.com/Dregan234/AetherVoice](https://github.com/Dregan234/AetherVoice)
 
