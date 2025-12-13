@@ -10,7 +10,7 @@
   "LoadSync": false,
   "CanUnloadAsync": false,
   "LoadPriority": 0,
-  "Changelog": "Initial release with TTS and sound file support",
+  "Changelog": "Migrated to Dalamud SDK 13.1.0",
   "Tags": [
     "ultimate",
     "ucob",
