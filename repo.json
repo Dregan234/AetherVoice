@@ -8,7 +8,7 @@
     "AssemblyVersion": "1.0.0.0",
     "RepoUrl": "https://github.com/Dregan234/ffxiv-naeltts",
     "ApplicableVersion": "any",
-    "DalamudApiLevel": 10,
+    "DalamudApiLevel": 13,
     "IsHide": false,
     "IsTestingExclusive": false,
     "DownloadCount": 0,
