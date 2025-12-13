@@ -1,15 +1,16 @@
-# Nael TTS Plugin Structure
+# AetherVoice Plugin Structure
 
 ## Project Files
 
 ```
-NaelTTS/
-├── NaelTTS.csproj          # Project file with dependencies
-├── NaelTTS.json            # Plugin manifest for Dalamud
-├── NaelTTSPlugin.cs        # Main plugin class
+AetherVoice/
+├── AetherVoice.csproj      # Project file with dependencies
+├── AetherVoice.json        # Plugin manifest for Dalamud
+├── Plugin.cs               # Main plugin class
 ├── Configuration.cs        # Configuration storage
 ├── TTSManager.cs           # Handles TTS and sound playback
-├── PluginUI.cs             # ImGui configuration window
+├── Windows/
+│   └── ConfigWindow.cs     # ImGui configuration window
 ├── NaelQuotes.cs           # Data structures for quotes
 └── NaelQuotes.json         # Embedded quote database
 ```
@@ -37,7 +38,7 @@ Edit in configuration UI or directly in `Configuration.cs` default values.
 Specify full paths in configuration UI. Supports WAV, MP3, OGG.
 
 ### Quote Matching
-Adjust fuzzy match threshold in `NaelTTSPlugin.cs` line with `Score: >= 85`.
+Adjust fuzzy match threshold in `Plugin.cs` line with `Score: >= 85`.
 
 ### Adding New Mechanics
 1. Add entry to `MechanicConfigs` in `Configuration.cs`
@@ -46,4 +47,4 @@ Adjust fuzzy match threshold in `NaelTTSPlugin.cs` line with `Score: >= 85`.
 
 ## Testing
 
-Use `/naeltts test` to test random mechanic without being in UCOB.
+Use `/aethervoice test` to test random mechanic without being in UCOB.

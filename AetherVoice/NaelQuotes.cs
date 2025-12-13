@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace NaelTTS;
+namespace AetherVoice;
 
 public struct NaelQuotes
 {

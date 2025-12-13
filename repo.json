@@ -1,20 +1,20 @@
 [
   {
     "Author": "Dregan234",
-    "Name": "Nael TTS",
-    "Punchline": "Text-to-Speech callouts for Nael mechanics in UCOB",
-    "Description": "Provides TTS or custom sound file callouts for Nael deus Darnus quotes. Supports custom text prompts like 'in out' or custom sound files for each mechanic.",
-    "InternalName": "NaelTTS",
+    "Name": "AetherVoice",
+    "Punchline": "Text-to-Speech callouts for UCOB mechanics and custom chat triggers",
+    "Description": "Provides TTS or custom sound file callouts for Nael deus Darnus quotes in UCOB. Also supports custom chat triggers with personalized TTS responses or sound files for any content.",
+    "InternalName": "AetherVoice",
     "AssemblyVersion": "1.0.0.0",
-    "RepoUrl": "https://github.com/Dregan234/ffxiv-naeltts",
+    "RepoUrl": "https://github.com/Dregan234/AetherVoice",
     "ApplicableVersion": "any",
     "DalamudApiLevel": 13,
     "IsHide": false,
     "IsTestingExclusive": false,
     "DownloadCount": 0,
     "LastUpdate": 0,
-    "DownloadLinkInstall": "https://github.com/Dregan234/ffxiv-naeltts/releases/latest/download/latest.zip",
-    "DownloadLinkUpdate": "https://github.com/Dregan234/ffxiv-naeltts/releases/latest/download/latest.zip",
-    "DownloadLinkTesting": "https://github.com/Dregan234/ffxiv-naeltts/releases/latest/download/latest.zip"
+    "DownloadLinkInstall": "https://github.com/Dregan234/AetherVoice/releases/latest/download/latest.zip",
+    "DownloadLinkUpdate": "https://github.com/Dregan234/AetherVoice/releases/latest/download/latest.zip",
+    "DownloadLinkTesting": "https://github.com/Dregan234/AetherVoice/releases/latest/download/latest.zip"
   }
 ]

@@ -25,18 +25,18 @@ jobs:
       shell: pwsh
 
     - name: Restore dependencies
-      run: dotnet restore NaelTTS/NaelTTS.csproj
+      run: dotnet restore AetherVoice/AetherVoice.csproj
 
     - name: Build Release
-      run: dotnet build NaelTTS/NaelTTS.csproj -c Release --no-restore
+      run: dotnet build AetherVoice/AetherVoice.csproj -c Release --no-restore
 
     - name: Create Release
       uses: ncipollo/release-action@v1
       with:
-        artifacts: "NaelTTS/bin/Release/NaelTTS/latest.zip,NaelTTS/bin/Release/NaelTTS/NaelTTS.json"
+        artifacts: "AetherVoice/bin/Release/AetherVoice/latest.zip,AetherVoice/bin/Release/AetherVoice/AetherVoice.json"
         allowUpdates: true
         draft: false
         prerelease: false
         generateReleaseNotes: true
-        asset_name: NaelTTS.json
+        asset_name: AetherVoice.json
         asset_content_type: application/json

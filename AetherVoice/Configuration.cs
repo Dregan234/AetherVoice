@@ -2,7 +2,7 @@ using Dalamud.Configuration;
 using System;
 using System.Collections.Generic;
 
-namespace NaelTTS;
+namespace AetherVoice;
 
 [Serializable]
 public class Configuration : IPluginConfiguration
@@ -15,6 +15,7 @@ public class Configuration : IPluginConfiguration
     public bool UseSoundFiles { get; set; } = false;
     public int TTSVolume { get; set; } = 100;
     public int TTSRate { get; set; } = 0; // -10 to 10
+    public int SoundFileVolume { get; set; } = 100; // 0 to 100
 
     // Custom text prompts for each mechanic
     public Dictionary<string, MechanicConfig> MechanicConfigs { get; set; } = new()
@@ -35,6 +36,9 @@ public class Configuration : IPluginConfiguration
         { "DynamoChariotDive", new MechanicConfig { TextPrompt = "in out dive", SoundFilePath = "" } }
     };
 
+    // Custom TTS triggers
+    public List<CustomTrigger> CustomTriggers { get; set; } = new();
+
     // The below exists just to make saving less cumbersome
     public void Save()
     {
@@ -47,4 +51,14 @@ public class MechanicConfig
 {
     public string TextPrompt { get; set; } = "";
     public string SoundFilePath { get; set; } = "";
+}
+
+[Serializable]
+public class CustomTrigger
+{
+    public string TriggerText { get; set; } = "";
+    public string ResponseText { get; set; } = "";
+    public string SoundFilePath { get; set; } = "";
+    public bool Enabled { get; set; } = true;
+    public bool UseExactMatch { get; set; } = false;
 }

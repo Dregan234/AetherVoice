@@ -1,9 +1,9 @@
 {
   "Author": "Dregan234",
-  "Name": "Nael TTS",
-  "Punchline": "Text-to-Speech callouts for Nael mechanics in UCOB",
-  "Description": "Provides TTS or custom sound file callouts for Nael deus Darnus quotes. Supports custom text prompts like 'in out' or custom sound files for each mechanic.",
-  "InternalName": "NaelTTS",
+  "Name": "AetherVoice",
+  "Punchline": "Text-to-Speech callouts for UCOB mechanics and custom chat triggers",
+  "Description": "Provides TTS or custom sound file callouts for Nael deus Darnus quotes in UCOB. Also supports custom chat triggers with personalized TTS responses or sound files for any content.",
+  "InternalName": "AetherVoice",
   "ApplicableVersion": "any",
   "DalamudApiLevel": 13,
   "LoadRequiredState": 0,

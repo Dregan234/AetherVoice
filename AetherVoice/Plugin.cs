@@ -14,9 +14,9 @@ using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using FuzzySharp;
-using NaelTTS.Windows;
+using AetherVoice.Windows;
 
-namespace NaelTTS;
+namespace AetherVoice;
 
 public sealed class Plugin : IDalamudPlugin
 {
@@ -26,10 +26,10 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static IChatGui ChatGui { get; private set; } = null!;
     [PluginService] internal static IPluginLog Log { get; private set; } = null!;
 
-    private const string CommandName = "/naeltts";
+    private const string CommandName = "/aethervoice";
 
     public Configuration Configuration { get; init; }
-    public readonly WindowSystem WindowSystem = new("NaelTTS");
+    public readonly WindowSystem WindowSystem = new("AetherVoice");
     private ConfigWindow ConfigWindow { get; init; }
 
     private TTSManager? ttsManager;
@@ -41,7 +41,7 @@ public sealed class Plugin : IDalamudPlugin
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
         // Load Nael quotes from embedded JSON
-        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("NaelTTS.NaelQuotes.json");
+        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("AetherVoice.NaelQuotes.json");
         if (stream == null)
         {
             Log.Error("Failed to load NaelQuotes.json");
@@ -63,7 +63,7 @@ public sealed class Plugin : IDalamudPlugin
 
         CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
-            HelpMessage = "Toggle TTS\n/naeltts cfg → open configuration\n/naeltts test → test TTS with random quote"
+            HelpMessage = "Toggle TTS\n/aethervoice cfg → open configuration\n/aethervoice test → test TTS with random quote"
         });
 
         // Tell the UI system that we want our windows to be drawn through the window system
@@ -76,7 +76,7 @@ public sealed class Plugin : IDalamudPlugin
 
         ChatGui.ChatMessage += OnChatMessage;
 
-        Log.Information($"===Nael TTS loaded===");
+        Log.Information($"===AetherVoice loaded===");
     }
 
     private void OnCommand(string command, string args)
@@ -94,7 +94,7 @@ public sealed class Plugin : IDalamudPlugin
                 Configuration.Enabled = !Configuration.Enabled;
                 Configuration.Save();
                 var status = Configuration.Enabled ? "enabled" : "disabled";
-                ChatGui.Print($"[Nael TTS] {status}");
+                ChatGui.Print($"[AetherVoice] {status}");
                 break;
         }
     }
@@ -103,14 +103,14 @@ public sealed class Plugin : IDalamudPlugin
     {
         if (naelQuotesDictionary.Count == 0)
         {
-            ChatGui.Print("[Nael TTS] No quotes loaded!");
+            ChatGui.Print("[AetherVoice] No quotes loaded!");
             return;
         }
 
         var random = new Random();
         var quoteKey = naelQuotesDictionary.Keys.ElementAt(random.Next(naelQuotesDictionary.Count));
         var mechanic = naelQuotesDictionary[quoteKey];
-        ChatGui.Print($"[Nael TTS] Testing: {mechanic} | Enabled: {Configuration.Enabled}, UseTTS: {Configuration.UseTTS}, UseSoundFiles: {Configuration.UseSoundFiles}");
+        ChatGui.Print($"[AetherVoice] Testing: {mechanic} | Enabled: {Configuration.Enabled}, UseTTS: {Configuration.UseTTS}, UseSoundFiles: {Configuration.UseSoundFiles}");
         Log.Info($"Testing mechanic: {mechanic}");
         ttsManager?.PlayMechanic(mechanic);
     }
@@ -125,12 +125,46 @@ public sealed class Plugin : IDalamudPlugin
         {
             if (payload is TextPayload { Text: not null } textPayload)
             {
+                // Check for Nael quotes first
                 var mechanic = IdentifyMechanic(textPayload.Text);
                 if (!string.IsNullOrEmpty(mechanic))
                 {
                     Log.Info($"Detected Nael quote from any source: {textPayload.Text}");
                     ttsManager?.PlayMechanic(mechanic);
+                    return; // Don't check custom triggers if we matched a Nael quote
                 }
+
+                // Check for custom triggers
+                CheckCustomTriggers(textPayload.Text);
+            }
+        }
+    }
+
+    private void CheckCustomTriggers(string text)
+    {
+        foreach (var trigger in Configuration.CustomTriggers)
+        {
+            if (!trigger.Enabled)
+                continue;
+
+            bool matched = trigger.UseExactMatch
+                ? text.Equals(trigger.TriggerText, StringComparison.OrdinalIgnoreCase)
+                : text.Contains(trigger.TriggerText, StringComparison.OrdinalIgnoreCase);
+
+            if (matched)
+            {
+                Log.Info($"Custom trigger matched: {trigger.TriggerText}");
+
+                if (Configuration.UseSoundFiles && !string.IsNullOrEmpty(trigger.SoundFilePath))
+                {
+                    ttsManager?.PlayCustomSound(trigger.SoundFilePath);
+                }
+                else if (!string.IsNullOrEmpty(trigger.ResponseText))
+                {
+                    ttsManager?.PlayCustomTTS(trigger.ResponseText);
+                }
+
+                break; // Only trigger once per message
             }
         }
     }
@@ -173,20 +207,19 @@ public sealed class Plugin : IDalamudPlugin
     {
         naelQuotesDictionary = new Dictionary<string, string>
         {
-            { GetQuote(6492), "DynamoChariot" },
-            { GetQuote(6493), "DynamoBeam" },
-            { GetQuote(6494), "BeamChariot" },
-            { GetQuote(6495), "BeamDynamo" },
-            { GetQuote(6496), "DiveChariot" },
-            { GetQuote(6497), "DiveDynamo" },
-            { GetQuote(6500), "MeteorStreamDive" },
-            { GetQuote(6501), "DiveBeam" },
-            { GetQuote(6502), "DiveDynamoMeteorStream" },
-            { GetQuote(6503), "DynamoDiveMeteorStream" },
-            { GetQuote(6504), "ChariotBeamDive" },
-            { GetQuote(6505), "ChariotDiveBeam" },
-            { GetQuote(6506), "DynamoDiveBeam" },
-            { GetQuote(6507), "DynamoChariotDive" }
+            { GetQuote(6492), "DiveDynamo" },        // From on high I descend, the hallowed moon to call! (Dive & In)
+            { GetQuote(6493), "DiveChariot" },       // From on high I descend, the iron path to walk! (Dive & Out)
+            { GetQuote(6494), "BeamDynamo" },        // Take fire, O hallowed moon! (Stack & In)
+            { GetQuote(6495), "BeamChariot" },       // Blazing path, lead me to iron rule! (Stack & Out)
+            { GetQuote(6496), "DynamoBeam" },        // O hallowed moon, take fire and scorch my foes! (In & Stack)
+            { GetQuote(6497), "DynamoChariot" },     // O hallowed moon, shine you the iron path! (In & Out)
+            { GetQuote(6500), "ChariotDiveBeam" },   // Unbending iron, descend with fiery edge! (Out & Dive & Stack)
+            { GetQuote(6501), "DiveBeam" },          // Fleeting light! 'Neath the red moon, scorch you the earth! (Dive & Stack)
+            { GetQuote(6502), "MeteorStreamDive" },  // Fleeting light! Amid a rain of stars, exalt you the red moon! (Spread & Dive)
+            { GetQuote(6503), "DynamoDiveMeteorStream" },  // From hallowed moon I descend, a rain of stars to bring! (In & Dive & Spread)
+            { GetQuote(6504), "DiveDynamoMeteorStream" },  // From on high I descend, the moon and stars to bring! (Dive & In & Spread)
+            { GetQuote(6506), "DynamoChariotDive" }, // From hallowed moon I bare iron, in my descent to wield! (In & Out & Dive)
+            { GetQuote(6507), "DynamoDiveBeam" }     // From hallowed moon I descend, upon burning earth to tread! (In & Dive & Stack)
         };
     }
 

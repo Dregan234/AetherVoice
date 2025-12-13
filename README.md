@@ -1,13 +1,14 @@
-# Nael TTS
+# AetherVoice
 
-**Repository**: [https://github.com/Dregan234/ffxiv-naeltts](https://github.com/Dregan234/ffxiv-naeltts)
+**Repository**: [https://github.com/Dregan234/AetherVoice](https://github.com/Dregan234/AetherVoice)
 
-A FFXIV Dalamud plugin that provides Text-to-Speech or custom sound file callouts for Nael deus Darnus mechanics in The Unending Coil of Bahamut (Ultimate).
+A FFXIV Dalamud plugin that provides Text-to-Speech or custom sound file callouts for Nael deus Darnus mechanics in The Unending Coil of Bahamut (Ultimate), plus custom chat triggers for any content.
 
 ## Features
 
 - **Text-to-Speech Callouts**: Uses Windows TTS to call out mechanics with customizable text prompts
 - **Custom Sound Files**: Alternative to TTS - use your own sound files for each mechanic
+- **Custom Chat Triggers**: Create personalized TTS or sound file responses for any chat message
 - **Fully Customizable**: Configure each mechanic's callout text or sound file
 - **Multi-language Support**: Detects Nael quotes in EN, DE, FR, JP, and CN clients
 - **Simple Commands**: Easy toggle and configuration access
@@ -20,11 +21,11 @@ A FFXIV Dalamud plugin that provides Text-to-Speech or custom sound file callout
 2. Go to the **Experimental** tab
 3. Under **Custom Plugin Repositories**, paste this URL:
    ```
-   https://raw.githubusercontent.com/Dregan234/ffxiv-naeltts/refs/heads/main/repo.json
+   https://raw.githubusercontent.com/Dregan234/AetherVoice/refs/heads/main/repo.json
    ```
 4. Click the **+** button and **Save**
 5. Type `/xlplugins` to open the Plugin Installer
-6. Search for "Nael TTS" and click **Install**
+6. Search for "AetherVoice" and click **Install**
 
 ### Prerequisites
 
@@ -35,24 +36,24 @@ A FFXIV Dalamud plugin that provides Text-to-Speech or custom sound file callout
 
 ### Dev Plugin Installation
 
-1. Open up `NaelTTS.sln` in your C# editor of choice (Visual Studio 2022 or JetBrains Rider).
+1. Open up `AetherVoice.sln` in your C# editor of choice (Visual Studio 2022 or JetBrains Rider).
 2. Build the solution. By default, this will build a `Debug` build.
-3. The resulting plugin DLL can be found at `NaelTTS/bin/x64/Debug/NaelTTS.dll`.
+3. The resulting plugin DLL can be found at `AetherVoice/bin/x64/Debug/AetherVoice.dll`.
 4. Launch the game and use `/xlsettings` in chat to open Dalamud settings.
-5. In `Experimental`, add the full path to `NaelTTS.dll` to the list of Dev Plugin Locations.
-6. Use `/xlplugins` to open the Plugin Installer, go to `Dev Tools > Installed Dev Plugins`, and enable NaelTTS.
+5. In `Experimental`, add the full path to `AetherVoice.dll` to the list of Dev Plugin Locations.
+6. Use `/xlplugins` to open the Plugin Installer, go to `Dev Tools > Installed Dev Plugins`, and enable AetherVoice.
 
 ## Usage
 
 ### Commands
 
-- `/naeltts` - Toggle the plugin on/off
-- `/naeltts cfg` or `/naeltts config` - Open configuration window
-- `/naeltts test` - Test a random mechanic callout
+- `/aethervoice` - Toggle the plugin on/off
+- `/aethervoice cfg` or `/aethervoice config` - Open configuration window
+- `/aethervoice test` - Test a random mechanic callout
 
 ### Configuration
 
-Open the configuration with `/naeltts cfg` to customize:
+Open the configuration with `/aethervoice cfg` to customize:
 
 1. **Audio Source**
    - Choose between Text-to-Speech or Sound Files
@@ -86,7 +87,7 @@ The plugin detects all 14 Nael quote mechanics:
 ## Project Structure
 
 ```
-NaelTTS/
+AetherVoice/
 ├── Plugin.cs               # Main plugin class
 ├── Configuration.cs        # Configuration storage
 ├── TTSManager.cs          # Handles TTS and sound playback
