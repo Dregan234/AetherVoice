@@ -10,7 +10,7 @@
   "LoadSync": false,
   "CanUnloadAsync": false,
   "LoadPriority": 0,
-  "Changelog": "Migrated to Dalamud SDK 13.1.0",
+  "Changelog": "Added general enable buttons and added missing quote.",
   "Tags": [
     "ultimate",
     "ucob",
