@@ -19,6 +19,7 @@ public class Configuration : IPluginConfiguration
     public bool UseSoundFiles { get; set; } = false;
     public int TTSVolume { get; set; } = 100;
     public int TTSRate { get; set; } = 0; // -10 to 10
+    public string TTSVoice { get; set; } = ""; // Empty string means default voice
     public int SoundFileVolume { get; set; } = 100; // 0 to 100
 
     // Custom text prompts for each mechanic

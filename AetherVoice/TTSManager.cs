@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
 using System.Speech.Synthesis;
 using System.Threading.Tasks;
 using NAudio.Wave;
@@ -16,21 +19,64 @@ public class TTSManager : IDisposable
     private IWavePlayer? waveOut;
     private WaveStream? audioStream;
     private readonly object audioLock = new object();
+    private readonly bool ttsAvailable;
+
+    public static bool IsTTSAvailable => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
     public TTSManager(Configuration config, IPluginLog pluginLog)
     {
         configuration = config;
         log = pluginLog;
+        ttsAvailable = IsTTSAvailable;
+
+        if (!ttsAvailable)
+        {
+            log.Warning("TTS is not available on this platform. Only sound files will work.");
+            return;
+        }
 
         // Always initialize TTS for fallback support
         try
         {
             synthesizer = new SpeechSynthesizer();
             synthesizer.Rate = configuration.TTSRate;
+
+            // Set voice if specified
+            if (!string.IsNullOrEmpty(configuration.TTSVoice))
+            {
+                try
+                {
+                    synthesizer.SelectVoice(configuration.TTSVoice);
+                }
+                catch (Exception ex)
+                {
+                    log.Warning($"Could not select voice '{configuration.TTSVoice}': {ex.Message}. Using default voice.");
+                }
+            }
         }
         catch (Exception ex)
         {
             log.Error($"Failed to initialize TTS: {ex.Message}");
+            ttsAvailable = false;
+        }
+    }
+
+    public static List<string> GetAvailableVoices()
+    {
+        if (!IsTTSAvailable)
+            return new List<string>();
+
+        try
+        {
+            using var synth = new SpeechSynthesizer();
+            return synth.GetInstalledVoices()
+                .Where(v => v.Enabled)
+                .Select(v => v.VoiceInfo.Name)
+                .ToList();
+        }
+        catch
+        {
+            return new List<string>();
         }
     }
 
@@ -108,13 +154,29 @@ public class TTSManager : IDisposable
 
     private void SpeakText(string text)
     {
-        if (synthesizer == null)
+        if (!ttsAvailable || synthesizer == null)
+        {
+            log.Warning("TTS is not available on this platform.");
             return;
+        }
 
         lock (audioLock)
         {
             try
             {
+                // Set voice if specified
+                if (!string.IsNullOrEmpty(configuration.TTSVoice))
+                {
+                    try
+                    {
+                        synthesizer.SelectVoice(configuration.TTSVoice);
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Warning($"Could not select voice '{configuration.TTSVoice}': {ex.Message}");
+                    }
+                }
+
                 // Generate TTS to a memory stream and play through NAudio for volume control
                 var stream = new MemoryStream();
                 synthesizer.SetOutputToWaveStream(stream);

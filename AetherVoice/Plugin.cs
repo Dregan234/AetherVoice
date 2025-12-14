@@ -190,7 +190,7 @@ public sealed class Plugin : IDalamudPlugin
     private string IdentifyMechanic(string input)
     {
         var match = Process.ExtractOne(input, naelQuotesDictionary.Keys, s => s);
-        return match is { Score: >= 85 } ? naelQuotesDictionary[match.Value] : string.Empty;
+        return match is { Score: >= 95 } ? naelQuotesDictionary[match.Value] : string.Empty;
     }
 
     private string GetQuote(int id)

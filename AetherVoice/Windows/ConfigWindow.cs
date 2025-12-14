@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.ImGuiFileDialog;
@@ -17,6 +19,8 @@ public class ConfigWindow : Window, IDisposable
     private int ttsVolume;
     private int ttsRate;
     private int soundFileVolume;
+    private string selectedVoice = "";
+    private List<string> availableVoices = new();
 
     private string[] mechanicKeys = Array.Empty<string>();
     private string[] mechanicTextPrompts = Array.Empty<string>();
@@ -48,6 +52,14 @@ public class ConfigWindow : Window, IDisposable
         ttsVolume = configuration.TTSVolume;
         ttsRate = configuration.TTSRate;
         soundFileVolume = configuration.SoundFileVolume;
+        selectedVoice = configuration.TTSVoice;
+
+        // Load available voices
+        availableVoices = TTSManager.GetAvailableVoices();
+        if (availableVoices.Count > 0 && string.IsNullOrEmpty(selectedVoice))
+        {
+            selectedVoice = availableVoices[0];
+        }
 
         mechanicKeys = new string[configuration.MechanicConfigs.Count];
         mechanicTextPrompts = new string[configuration.MechanicConfigs.Count];
@@ -140,9 +152,25 @@ public class ConfigWindow : Window, IDisposable
 
         // Audio Source Selection
         ImGui.Text("Audio Source:");
+
+        // Show warning if TTS is not available
+        if (!TTSManager.IsTTSAvailable)
+        {
+            ImGui.TextColored(new Vector4(1, 0.5f, 0, 1), "⚠ TTS is only available on Windows.");
+            ImGui.Text("You can only use sound files on this platform.");
+            useTTS = false;
+            useSoundFiles = true;
+        }
+
         if (ImGui.Checkbox("Use Text-to-Speech", ref useTTS))
         {
             if (useTTS) useSoundFiles = false;
+        }
+
+        if (!TTSManager.IsTTSAvailable)
+        {
+            ImGui.SameLine();
+            ImGui.TextDisabled("(Windows only)");
         }
 
         if (ImGui.Checkbox("Use Sound Files", ref useSoundFiles))
@@ -156,6 +184,20 @@ public class ConfigWindow : Window, IDisposable
         if (useTTS)
         {
             ImGui.Text("TTS Settings:");
+
+            // Voice selection
+            if (availableVoices.Count > 0)
+            {
+                var currentVoiceIndex = availableVoices.IndexOf(selectedVoice);
+                if (currentVoiceIndex == -1) currentVoiceIndex = 0;
+
+                ImGui.SetNextItemWidth(300);
+                if (ImGui.Combo("Voice", ref currentVoiceIndex, availableVoices.ToArray(), availableVoices.Count))
+                {
+                    selectedVoice = availableVoices[currentVoiceIndex];
+                }
+            }
+
             ImGui.SliderInt("Volume", ref ttsVolume, 0, 100);
             ImGui.SliderInt("Speed", ref ttsRate, -10, 10);
             ImGui.Text("(Negative = slower, Positive = faster)");
@@ -347,6 +389,7 @@ public class ConfigWindow : Window, IDisposable
         configuration.TTSVolume = ttsVolume;
         configuration.TTSRate = ttsRate;
         configuration.SoundFileVolume = soundFileVolume;
+        configuration.TTSVoice = selectedVoice;
 
         for (int i = 0; i < mechanicKeys.Length; i++)
         {
