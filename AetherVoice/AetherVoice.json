@@ -5,7 +5,7 @@
   "Description": "Provides TTS or custom sound file callouts for Nael deus Darnus quotes in UCOB. Also supports custom chat triggers with personalized TTS responses or sound files for any content.",
   "InternalName": "AetherVoice",
   "ApplicableVersion": "any",
-  "DalamudApiLevel": 13,
+  "DalamudApiLevel": 14,
   "LoadRequiredState": 0,
   "LoadSync": false,
   "CanUnloadAsync": false,
