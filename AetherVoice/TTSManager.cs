@@ -224,6 +224,7 @@ public class TTSManager : IDisposable
                 // Stop any currently playing audio
                 StopAudioInternal();
 
+                log.Debug($"Opening sound file: {filePath}");
                 audioStream = new AudioFileReader(filePath);
 
                 // Use VolumeSampleProvider for independent volume control
@@ -232,13 +233,19 @@ public class TTSManager : IDisposable
                     Volume = configuration.SoundFileVolume / 100f
                 };
 
+                log.Debug($"Initializing WaveOutEvent with volume: {volumeProvider.Volume}");
                 waveOut = new WaveOutEvent();
                 waveOut.Init(volumeProvider);
                 waveOut.Play();
+                log.Debug("Playback started successfully");
             }
             catch (Exception ex)
             {
-                log.Error($"Error playing sound file: {ex.Message}");
+                log.Error($"Error playing sound file {filePath}: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    log.Error($"Inner exception: {ex.InnerException.Message}");
+                }
                 StopAudioInternal();
             }
         }
@@ -248,16 +255,22 @@ public class TTSManager : IDisposable
     {
         try
         {
-            waveOut?.Stop();
-            waveOut?.Dispose();
-            waveOut = null;
+            if (waveOut != null)
+            {
+                waveOut.Stop();
+                waveOut.Dispose();
+                waveOut = null;
+            }
 
-            audioStream?.Dispose();
-            audioStream = null;
+            if (audioStream != null)
+            {
+                audioStream.Dispose();
+                audioStream = null;
+            }
         }
         catch (Exception ex)
         {
-            log.Error($"Error stopping audio: {ex.Message}");
+            log.Error($"Error during StopAudioInternal: {ex.Message}");
         }
     }
 

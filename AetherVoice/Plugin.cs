@@ -120,29 +120,26 @@ public sealed class Plugin : IDalamudPlugin
         if (!Configuration.Enabled)
             return;
 
-        // Check all message types, not just NPC dialogue
-        foreach (var payload in message.Payloads)
-        {
-            if (payload is TextPayload { Text: not null } textPayload)
-            {
-                // Check for Nael quotes first
-                if (Configuration.EnableNaelQuotes)
-                {
-                    var mechanic = IdentifyMechanic(textPayload.Text);
-                    if (!string.IsNullOrEmpty(mechanic))
-                    {
-                        Log.Info($"Detected Nael quote from any source: {textPayload.Text}");
-                        ttsManager?.PlayMechanic(mechanic);
-                        return; // Don't check custom triggers if we matched a Nael quote
-                    }
-                }
+        var fullText = message.TextValue;
+        if (string.IsNullOrEmpty(fullText))
+            return;
 
-                // Check for custom triggers
-                if (Configuration.EnableCustomTriggers)
-                {
-                    CheckCustomTriggers(textPayload.Text);
-                }
+        // Check for Nael quotes first
+        if (Configuration.EnableNaelQuotes)
+        {
+            var mechanic = IdentifyMechanic(fullText);
+            if (!string.IsNullOrEmpty(mechanic))
+            {
+                Log.Info($"Detected Nael quote: {fullText}");
+                ttsManager?.PlayMechanic(mechanic);
+                return; // Don't check custom triggers if we matched a Nael quote
             }
+        }
+
+        // Check for custom triggers
+        if (Configuration.EnableCustomTriggers)
+        {
+            CheckCustomTriggers(fullText);
         }
     }
 
@@ -161,7 +158,8 @@ public sealed class Plugin : IDalamudPlugin
             {
                 Log.Info($"Custom trigger matched: {trigger.TriggerText}");
 
-                if (Configuration.UseSoundFiles && !string.IsNullOrEmpty(trigger.SoundFilePath))
+                // Prioritize sound file if path is provided, otherwise use TTS
+                if (!string.IsNullOrEmpty(trigger.SoundFilePath))
                 {
                     ttsManager?.PlayCustomSound(trigger.SoundFilePath);
                 }
