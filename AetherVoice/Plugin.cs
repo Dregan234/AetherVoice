@@ -4,8 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using Dalamud.Game;
 using Dalamud.Game.Command;
+using Dalamud.Game.Chat;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
@@ -18,25 +21,33 @@ using AetherVoice.Windows;
 
 namespace AetherVoice;
 
-public sealed class Plugin : IDalamudPlugin
+public sealed class Plugin : IAsyncDalamudPlugin
 {
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
     [PluginService] internal static ICommandManager CommandManager { get; private set; } = null!;
     [PluginService] internal static IClientState ClientState { get; private set; } = null!;
     [PluginService] internal static IChatGui ChatGui { get; private set; } = null!;
     [PluginService] internal static IPluginLog Log { get; private set; } = null!;
+    [PluginService] internal static IFramework Framework { get; private set; } = null!;
 
     private const string CommandName = "/aethervoice";
 
-    public Configuration Configuration { get; init; }
+    public string Name => "AetherVoice";
+
+    public Configuration Configuration { get; private set; } = null!;
     public readonly WindowSystem WindowSystem = new("AetherVoice");
-    private ConfigWindow ConfigWindow { get; init; }
+    private ConfigWindow ConfigWindow { get; set; } = null!;
 
     private TTSManager? ttsManager;
-    private readonly NaelQuotes naelQuotes;
+    private NaelQuotes naelQuotes;
     private Dictionary<string, string> naelQuotesDictionary = new();
 
     public Plugin()
+    {
+        naelQuotes = new NaelQuotes { Quotes = new List<Quote>() };
+    }
+
+    public async Task LoadAsync(CancellationToken cancellationToken)
     {
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
@@ -45,36 +56,43 @@ public sealed class Plugin : IDalamudPlugin
         if (stream == null)
         {
             Log.Error("Failed to load NaelQuotes.json");
-            naelQuotes = new NaelQuotes { Quotes = new List<Quote>() };
         }
         else
         {
             using var streamReader = new StreamReader(stream);
-            var json = streamReader.ReadToEnd();
+            var json = await streamReader.ReadToEndAsync(cancellationToken);
             naelQuotes = JsonSerializer.Deserialize<NaelQuotes>(json);
+        }
+
+        if (naelQuotes.Quotes == null)
+        {
+            naelQuotes.Quotes = new List<Quote>();
         }
 
         LoadQuotesDictionary();
 
         ttsManager = new TTSManager(Configuration, Log);
 
-        ConfigWindow = new ConfigWindow(this);
-        WindowSystem.AddWindow(ConfigWindow);
-
-        CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
+        await Framework.Run(() =>
         {
-            HelpMessage = "Toggle TTS\n/aethervoice cfg → open configuration\n/aethervoice test → test TTS with random quote"
+            ConfigWindow = new ConfigWindow(this);
+            WindowSystem.AddWindow(ConfigWindow);
+
+            CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
+            {
+                HelpMessage = "Toggle TTS\n/aethervoice cfg → open configuration\n/aethervoice test → test TTS with random quote"
+            });
+
+            // Tell the UI system that we want our windows to be drawn through the window system
+            PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
+
+            // This adds a button to the plugin installer entry of this plugin which allows
+            // toggling the display status of the configuration ui
+            PluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUi;
+            PluginInterface.UiBuilder.OpenMainUi += ToggleConfigUi;
+
+            ChatGui.ChatMessage += OnChatMessage;
         });
-
-        // Tell the UI system that we want our windows to be drawn through the window system
-        PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
-
-        // This adds a button to the plugin installer entry of this plugin which allows
-        // toggling the display status of the configuration ui
-        PluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUi;
-        PluginInterface.UiBuilder.OpenMainUi += ToggleConfigUi;
-
-        ChatGui.ChatMessage += OnChatMessage;
 
         Log.Information($"===AetherVoice loaded===");
     }
@@ -115,12 +133,12 @@ public sealed class Plugin : IDalamudPlugin
         ttsManager?.PlayMechanic(mechanic);
     }
 
-    private void OnChatMessage(XivChatType type, int timestamp, ref SeString sender, ref SeString message, ref bool handled)
+    private void OnChatMessage(IChatMessage message)
     {
         if (!Configuration.Enabled)
             return;
 
-        var fullText = message.TextValue;
+        var fullText = message.Message.TextValue;
         if (string.IsNullOrEmpty(fullText))
             return;
 
@@ -194,6 +212,8 @@ public sealed class Plugin : IDalamudPlugin
     private string GetQuote(int id)
     {
         var quote = naelQuotes.Quotes.Find(q => q.ID == id);
+        if (quote.ID == 0) return string.Empty;
+
         var quoteText = ClientState.ClientLanguage switch
         {
             ClientLanguage.English => quote.Text.Text_en,
@@ -236,7 +256,7 @@ public sealed class Plugin : IDalamudPlugin
 
     public void ToggleConfigUi() => ConfigWindow.Toggle();
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
         // Unregister all actions to not leak anything during disposal of plugin
         PluginInterface.UiBuilder.Draw -= WindowSystem.Draw;
@@ -249,5 +269,7 @@ public sealed class Plugin : IDalamudPlugin
         ttsManager?.Dispose();
         ChatGui.ChatMessage -= OnChatMessage;
         CommandManager.RemoveHandler(CommandName);
+
+        await ValueTask.CompletedTask;
     }
 }
