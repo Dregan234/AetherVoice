@@ -25,7 +25,7 @@ jobs:
       shell: pwsh
 
     - name: Restore dependencies
-      run: dotnet restore AetherVoice/AetherVoice.csproj
+      run: dotnet restore AetherVoice.sln
 
     - name: Build Release
       run: dotnet build AetherVoice/AetherVoice.csproj -c Release --no-restore

@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Speech.Synthesis;
+using System.Text.Json;
 using System.Threading.Tasks;
-using NAudio.Wave;
-using NAudio.Wave.SampleProviders;
+using NAudio.CoreAudioApi;
 using Dalamud.Plugin.Services;
 
 namespace AetherVoice;
@@ -15,50 +17,106 @@ public class TTSManager : IDisposable
 {
     private readonly Configuration configuration;
     private readonly IPluginLog log;
-    private SpeechSynthesizer? synthesizer;
-    private IWavePlayer? waveOut;
-    private WaveStream? audioStream;
-    private readonly object audioLock = new object();
-    private readonly bool ttsAvailable;
+    private readonly string helperExePath;
+    private int helperPid;
+    private NamedPipeClientStream? pipeStream;
+    private StreamWriter? pipeWriter;
+    private volatile bool helperReady;
+    private readonly object sendLock = new object();
 
     public static bool IsTTSAvailable => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
-    public TTSManager(Configuration config, IPluginLog pluginLog)
+    #region P/Invoke
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct STARTUPINFO
+    {
+        public int cb;
+        public IntPtr lpReserved;
+        public IntPtr lpDesktop;
+        public IntPtr lpTitle;
+        public int dwX, dwY, dwXSize, dwYSize;
+        public int dwXCountChars, dwYCountChars, dwFillAttribute;
+        public int dwFlags;
+        public short wShowWindow;
+        public short cbReserved2;
+        public IntPtr lpReserved2;
+        public IntPtr hStdInput, hStdOutput, hStdError;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct STARTUPINFOEX
+    {
+        public STARTUPINFO StartupInfo;
+        public IntPtr lpAttributeList;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct PROCESS_INFORMATION
+    {
+        public IntPtr hProcess;
+        public IntPtr hThread;
+        public int dwProcessId;
+        public int dwThreadId;
+    }
+
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    private static extern bool CreateProcess(
+        string? lpApplicationName, string lpCommandLine,
+        IntPtr lpProcessAttributes, IntPtr lpThreadAttributes,
+        bool bInheritHandles, uint dwCreationFlags,
+        IntPtr lpEnvironment, string? lpCurrentDirectory,
+        ref STARTUPINFOEX lpStartupInfo, out PROCESS_INFORMATION lpProcessInformation);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool InitializeProcThreadAttributeList(
+        IntPtr lpAttributeList, int dwAttributeCount, int dwFlags, ref IntPtr lpSize);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool UpdateProcThreadAttribute(
+        IntPtr lpAttributeList, uint dwFlags, IntPtr Attribute,
+        ref IntPtr lpValue, IntPtr cbSize, IntPtr lpPreviousValue, IntPtr lpReturnSize);
+
+    [DllImport("kernel32.dll")]
+    private static extern void DeleteProcThreadAttributeList(IntPtr lpAttributeList);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr OpenProcess(uint dwDesiredAccess, bool bInheritHandle, int dwProcessId);
+
+    [DllImport("kernel32.dll")]
+    private static extern bool CloseHandle(IntPtr hObject);
+
+    private const uint EXTENDED_STARTUPINFO_PRESENT = 0x00080000;
+    private const uint CREATE_NO_WINDOW = 0x08000000;
+    private const uint PROCESS_CREATE_PROCESS = 0x0080;
+    private static readonly IntPtr PROC_THREAD_ATTRIBUTE_PARENT_PROCESS = (IntPtr)0x00020000;
+
+    #endregion
+
+    public TTSManager(Configuration config, IPluginLog pluginLog, string helperPath)
     {
         configuration = config;
         log = pluginLog;
-        ttsAvailable = IsTTSAvailable;
+        helperExePath = helperPath;
 
-        if (!ttsAvailable)
+        if (!IsTTSAvailable)
         {
             log.Warning("TTS is not available on this platform. Only sound files will work.");
             return;
         }
 
-        // Always initialize TTS for fallback support
-        try
+        Task.Run(() =>
         {
-            synthesizer = new SpeechSynthesizer();
-            synthesizer.Rate = configuration.TTSRate;
-
-            // Set voice if specified
-            if (!string.IsNullOrEmpty(configuration.TTSVoice))
+            try
             {
-                try
-                {
-                    synthesizer.SelectVoice(configuration.TTSVoice);
-                }
-                catch (Exception ex)
-                {
-                    log.Warning($"Could not select voice '{configuration.TTSVoice}': {ex.Message}. Using default voice.");
-                }
+                LaunchHelper();
+                SendConfigureDirect();
             }
-        }
-        catch (Exception ex)
-        {
-            log.Error($"Failed to initialize TTS: {ex.Message}");
-            ttsAvailable = false;
-        }
+            catch (Exception ex)
+            {
+                log.Error($"Failed to launch audio helper: {ex.Message}");
+            }
+        });
     }
 
     public static List<string> GetAvailableVoices()
@@ -80,6 +138,25 @@ public class TTSManager : IDisposable
         }
     }
 
+    public static List<(string Id, string FriendlyName)> GetAvailableDevices()
+    {
+        try
+        {
+            using var enumerator = new MMDeviceEnumerator();
+            var devices = new List<(string Id, string FriendlyName)>();
+            foreach (var device in enumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active))
+            {
+                devices.Add((device.ID, device.FriendlyName));
+                device.Dispose();
+            }
+            return devices;
+        }
+        catch
+        {
+            return new List<(string, string)>();
+        }
+    }
+
     public void PlayMechanic(string mechanicKey)
     {
         if (!configuration.Enabled)
@@ -97,16 +174,15 @@ public class TTSManager : IDisposable
             {
                 if (configuration.UseSoundFiles && !string.IsNullOrEmpty(mechanicConfig.SoundFilePath))
                 {
-                    PlaySoundFile(mechanicConfig.SoundFilePath);
+                    SendCommand(new { Cmd = "PlayFile", Path = mechanicConfig.SoundFilePath });
                 }
                 else if (configuration.UseSoundFiles && string.IsNullOrEmpty(mechanicConfig.SoundFilePath) && !string.IsNullOrEmpty(mechanicConfig.TextPrompt))
                 {
-                    // Fallback to TTS if sound file mode is enabled but no file path is set
-                    SpeakText(mechanicConfig.TextPrompt);
+                    SendCommand(new { Cmd = "Speak", Text = mechanicConfig.TextPrompt });
                 }
                 else if (configuration.UseTTS && !string.IsNullOrEmpty(mechanicConfig.TextPrompt))
                 {
-                    SpeakText(mechanicConfig.TextPrompt);
+                    SendCommand(new { Cmd = "Speak", Text = mechanicConfig.TextPrompt });
                 }
             }
             catch (Exception ex)
@@ -125,7 +201,7 @@ public class TTSManager : IDisposable
         {
             try
             {
-                SpeakText(text);
+                SendCommand(new { Cmd = "Speak", Text = text });
             }
             catch (Exception ex)
             {
@@ -143,7 +219,7 @@ public class TTSManager : IDisposable
         {
             try
             {
-                PlaySoundFile(filePath);
+                SendCommand(new { Cmd = "PlayFile", Path = filePath });
             }
             catch (Exception ex)
             {
@@ -152,143 +228,270 @@ public class TTSManager : IDisposable
         });
     }
 
-    private void SpeakText(string text)
+    private void LaunchHelper()
     {
-        if (!ttsAvailable || synthesizer == null)
+        if (!File.Exists(helperExePath))
         {
-            log.Warning("TTS is not available on this platform.");
+            log.Error($"Audio helper not found at: {helperExePath}");
             return;
         }
 
-        lock (audioLock)
+        helperReady = false;
+        var helperDir = Path.GetDirectoryName(helperExePath)!;
+        var pipeName = $"AetherVoice_{Guid.NewGuid():N}";
+        var commandLine = $"\"{helperExePath}\" {pipeName}";
+
+        if (!LaunchWithReparent(commandLine, helperDir))
+        {
+            log.Warning("Reparented launch failed, falling back to direct CreateProcess.");
+            LaunchDirect(commandLine, helperDir);
+        }
+
+        try
+        {
+            pipeStream = new NamedPipeClientStream(".", pipeName, PipeDirection.Out);
+            pipeStream.Connect(5000);
+            pipeWriter = new StreamWriter(pipeStream) { AutoFlush = true };
+            helperReady = true;
+            log.Info($"Connected to audio helper (PID {helperPid}) via named pipe.");
+        }
+        catch (Exception ex)
+        {
+            log.Error($"Failed to connect to audio helper pipe: {ex.Message}");
+            KillHelper();
+        }
+    }
+
+    private bool LaunchWithReparent(string commandLine, string workingDir)
+    {
+        var explorerProcesses = Process.GetProcessesByName("explorer");
+        if (explorerProcesses.Length == 0)
+        {
+            foreach (var p in explorerProcesses) p.Dispose();
+            return false;
+        }
+
+        var explorerHandle = OpenProcess(PROCESS_CREATE_PROCESS, false, explorerProcesses[0].Id);
+        foreach (var p in explorerProcesses) p.Dispose();
+
+        if (explorerHandle == IntPtr.Zero)
+        {
+            log.Warning($"Could not open explorer.exe handle: Win32 error {Marshal.GetLastWin32Error()}");
+            return false;
+        }
+
+        var lpSize = IntPtr.Zero;
+        InitializeProcThreadAttributeList(IntPtr.Zero, 1, 0, ref lpSize);
+        var lpAttributeList = Marshal.AllocHGlobal(lpSize);
+
+        try
+        {
+            if (!InitializeProcThreadAttributeList(lpAttributeList, 1, 0, ref lpSize))
+            {
+                log.Warning($"InitializeProcThreadAttributeList failed: Win32 error {Marshal.GetLastWin32Error()}");
+                return false;
+            }
+
+            if (!UpdateProcThreadAttribute(lpAttributeList, 0, PROC_THREAD_ATTRIBUTE_PARENT_PROCESS,
+                ref explorerHandle, (IntPtr)IntPtr.Size, IntPtr.Zero, IntPtr.Zero))
+            {
+                log.Warning($"UpdateProcThreadAttribute failed: Win32 error {Marshal.GetLastWin32Error()}");
+                DeleteProcThreadAttributeList(lpAttributeList);
+                return false;
+            }
+
+            var si = new STARTUPINFOEX();
+            si.StartupInfo.cb = Marshal.SizeOf(si);
+            si.lpAttributeList = lpAttributeList;
+
+            if (!CreateProcess(null, commandLine, IntPtr.Zero, IntPtr.Zero, false,
+                CREATE_NO_WINDOW | EXTENDED_STARTUPINFO_PRESENT,
+                IntPtr.Zero, workingDir, ref si, out var pi))
+            {
+                log.Warning($"CreateProcess with reparent failed: Win32 error {Marshal.GetLastWin32Error()}");
+                DeleteProcThreadAttributeList(lpAttributeList);
+                return false;
+            }
+
+            helperPid = pi.dwProcessId;
+            CloseHandle(pi.hProcess);
+            CloseHandle(pi.hThread);
+            DeleteProcThreadAttributeList(lpAttributeList);
+
+            log.Info($"Audio helper launched with PID {helperPid} (parent: explorer.exe).");
+            return true;
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(lpAttributeList);
+            CloseHandle(explorerHandle);
+        }
+    }
+
+    private void LaunchDirect(string commandLine, string workingDir)
+    {
+        var si = new STARTUPINFOEX();
+        si.StartupInfo.cb = Marshal.SizeOf(si.StartupInfo);
+
+        if (!CreateProcess(null, commandLine, IntPtr.Zero, IntPtr.Zero, false,
+            CREATE_NO_WINDOW, IntPtr.Zero, workingDir, ref si, out var pi))
+        {
+            log.Error($"CreateProcess failed: Win32 error {Marshal.GetLastWin32Error()}");
+            return;
+        }
+
+        helperPid = pi.dwProcessId;
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+        log.Info($"Audio helper launched with PID {helperPid} (direct, not reparented).");
+    }
+
+    private void SendConfigureDirect()
+    {
+        if (pipeWriter == null)
+            return;
+
+        try
+        {
+            var json = JsonSerializer.Serialize(new
+            {
+                Cmd = "Configure",
+                Voice = configuration.TTSVoice ?? "",
+                Rate = configuration.TTSRate,
+                TtsVolume = configuration.TTSVolume,
+                SoundVolume = configuration.SoundFileVolume,
+                DeviceId = configuration.AudioOutputDeviceId ?? ""
+            });
+            pipeWriter.WriteLine(json);
+        }
+        catch (Exception ex)
+        {
+            log.Warning($"Failed to send configure to audio helper: {ex.Message}");
+        }
+    }
+
+    private void SendCommand(object command)
+    {
+        lock (sendLock)
         {
             try
             {
-                // Set voice if specified
-                if (!string.IsNullOrEmpty(configuration.TTSVoice))
+                if (!helperReady)
                 {
-                    try
-                    {
-                        synthesizer.SelectVoice(configuration.TTSVoice);
-                    }
-                    catch (Exception ex)
-                    {
-                        log.Warning($"Could not select voice '{configuration.TTSVoice}': {ex.Message}");
-                    }
+                    EnsureHelperRunning();
+                    if (!helperReady)
+                        return;
                 }
 
-                // Generate TTS to a memory stream and play through NAudio for volume control
-                var stream = new MemoryStream();
-                synthesizer.SetOutputToWaveStream(stream);
-                synthesizer.Rate = configuration.TTSRate;
-                synthesizer.Speak(text);
+                if (pipeWriter == null)
+                    return;
 
-                // Reset stream position and play through NAudio
-                stream.Position = 0;
-
-                StopAudioInternal();
-                audioStream = new WaveFileReader(stream);
-
-                // Use VolumeSampleProvider for independent volume control
-                var volumeProvider = new VolumeSampleProvider(audioStream.ToSampleProvider())
-                {
-                    Volume = configuration.TTSVolume / 100f
-                };
-
-                waveOut = new WaveOutEvent();
-                waveOut.Init(volumeProvider);
-                waveOut.Play();
-
-                // Reset synthesizer output to default
-                synthesizer.SetOutputToDefaultAudioDevice();
+                var json = JsonSerializer.Serialize(command);
+                pipeWriter.WriteLine(json);
             }
             catch (Exception ex)
             {
-                log.Error($"TTS error: {ex.Message}");
+                log.Warning($"Failed to send command to audio helper: {ex.Message}");
+                helperReady = false;
+                KillHelper();
             }
         }
     }
 
-    private void PlaySoundFile(string filePath)
+    private void EnsureHelperRunning()
     {
-        if (!File.Exists(filePath))
+        if (!IsHelperAlive())
         {
-            log.Warning($"Sound file not found: {filePath}");
-            return;
-        }
-
-        lock (audioLock)
-        {
-            try
-            {
-                // Stop any currently playing audio
-                StopAudioInternal();
-
-                log.Debug($"Opening sound file: {filePath}");
-                audioStream = new AudioFileReader(filePath);
-
-                // Use VolumeSampleProvider for independent volume control
-                var volumeProvider = new VolumeSampleProvider(audioStream.ToSampleProvider())
-                {
-                    Volume = configuration.SoundFileVolume / 100f
-                };
-
-                log.Debug($"Initializing WaveOutEvent with volume: {volumeProvider.Volume}");
-                waveOut = new WaveOutEvent();
-                waveOut.Init(volumeProvider);
-                waveOut.Play();
-                log.Debug("Playback started successfully");
-            }
-            catch (Exception ex)
-            {
-                log.Error($"Error playing sound file {filePath}: {ex.Message}");
-                if (ex.InnerException != null)
-                {
-                    log.Error($"Inner exception: {ex.InnerException.Message}");
-                }
-                StopAudioInternal();
-            }
+            log.Info("Audio helper not running, relaunching...");
+            helperReady = false;
+            LaunchHelper();
+            SendConfigureDirect();
         }
     }
 
-    private void StopAudioInternal()
+    private bool IsHelperAlive()
+    {
+        if (helperPid == 0)
+            return false;
+
+        try
+        {
+            var proc = Process.GetProcessById(helperPid);
+            proc.Dispose();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private void KillHelper()
     {
         try
         {
-            if (waveOut != null)
-            {
-                waveOut.Stop();
-                waveOut.Dispose();
-                waveOut = null;
-            }
+            pipeWriter?.Close();
+            pipeWriter = null;
 
-            if (audioStream != null)
+            pipeStream?.Close();
+            pipeStream = null;
+
+            if (helperPid != 0)
             {
-                audioStream.Dispose();
-                audioStream = null;
+                try
+                {
+                    var proc = Process.GetProcessById(helperPid);
+                    proc.Kill();
+                    proc.Dispose();
+                }
+                catch { }
+
+                helperPid = 0;
             }
         }
         catch (Exception ex)
         {
-            log.Error($"Error during StopAudioInternal: {ex.Message}");
-        }
-    }
-
-    private void StopAudio()
-    {
-        lock (audioLock)
-        {
-            StopAudioInternal();
+            log.Error($"Error killing audio helper: {ex.Message}");
         }
     }
 
     public void Dispose()
     {
-        StopAudio();
-        lock (audioLock)
+        try
         {
-            synthesizer?.Dispose();
-            synthesizer = null;
+            if (pipeWriter != null)
+            {
+                var json = JsonSerializer.Serialize(new { Cmd = "Stop" });
+                pipeWriter.WriteLine(json);
+            }
+        }
+        catch { }
+
+        try
+        {
+            pipeWriter?.Close();
+            pipeWriter = null;
+
+            pipeStream?.Close();
+            pipeStream = null;
+
+            if (helperPid != 0)
+            {
+                try
+                {
+                    var proc = Process.GetProcessById(helperPid);
+                    if (!proc.WaitForExit(2000))
+                        proc.Kill();
+                    proc.Dispose();
+                }
+                catch { }
+
+                helperPid = 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            log.Error($"Error disposing audio helper: {ex.Message}");
         }
     }
 }

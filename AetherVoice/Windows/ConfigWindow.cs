@@ -22,6 +22,10 @@ public class ConfigWindow : Window, IDisposable
     private string selectedVoice = "";
     private List<string> availableVoices = new();
 
+    private string selectedDeviceId = "";
+    private List<string> availableDeviceIds = new();
+    private List<string> availableDeviceNames = new();
+
     private string[] mechanicKeys = Array.Empty<string>();
     private string[] mechanicTextPrompts = Array.Empty<string>();
     private string[] mechanicSoundPaths = Array.Empty<string>();
@@ -45,6 +49,21 @@ public class ConfigWindow : Window, IDisposable
 
     public void Dispose() { }
 
+    private void RefreshAudioDevices()
+    {
+        availableDeviceIds = new List<string> { "" };
+        availableDeviceNames = new List<string> { "Default (System)" };
+
+        foreach (var (id, name) in TTSManager.GetAvailableDevices())
+        {
+            availableDeviceIds.Add(id);
+            availableDeviceNames.Add(name);
+        }
+
+        if (!availableDeviceIds.Contains(selectedDeviceId))
+            selectedDeviceId = "";
+    }
+
     private void LoadConfiguration()
     {
         useTTS = configuration.UseTTS;
@@ -60,6 +79,9 @@ public class ConfigWindow : Window, IDisposable
         {
             selectedVoice = availableVoices[0];
         }
+
+        selectedDeviceId = configuration.AudioOutputDeviceId;
+        RefreshAudioDevices();
 
         mechanicKeys = new string[configuration.MechanicConfigs.Count];
         mechanicTextPrompts = new string[configuration.MechanicConfigs.Count];
@@ -176,6 +198,26 @@ public class ConfigWindow : Window, IDisposable
         if (ImGui.Checkbox("Use Sound Files", ref useSoundFiles))
         {
             if (useSoundFiles) useTTS = false;
+        }
+
+        ImGui.Separator();
+
+        // Audio Output Device
+        ImGui.Text("Audio Output Device:");
+
+        var currentDeviceIndex = availableDeviceIds.IndexOf(selectedDeviceId);
+        if (currentDeviceIndex == -1) currentDeviceIndex = 0;
+
+        ImGui.SetNextItemWidth(300);
+        if (ImGui.Combo("Output Device", ref currentDeviceIndex, availableDeviceNames.ToArray(), availableDeviceNames.Count))
+        {
+            selectedDeviceId = availableDeviceIds[currentDeviceIndex];
+        }
+
+        ImGui.SameLine();
+        if (ImGui.Button("Refresh##devices"))
+        {
+            RefreshAudioDevices();
         }
 
         ImGui.Separator();
@@ -390,6 +432,7 @@ public class ConfigWindow : Window, IDisposable
         configuration.TTSRate = ttsRate;
         configuration.SoundFileVolume = soundFileVolume;
         configuration.TTSVoice = selectedVoice;
+        configuration.AudioOutputDeviceId = selectedDeviceId;
 
         for (int i = 0; i < mechanicKeys.Length; i++)
         {

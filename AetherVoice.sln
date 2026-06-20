@@ -4,6 +4,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AetherVoice", "AetherVoice\AetherVoice.csproj", "{8A9B0F1E-4B5C-4D6E-9F2A-1C3D5E7F8A9B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AetherVoice.AudioHelper", "AetherVoice.AudioHelper\AetherVoice.AudioHelper.csproj", "{B2C7D3E4-5F6A-7B8C-9D0E-1F2A3B4C5D6E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -14,5 +16,9 @@ Global
 		{8A9B0F1E-4B5C-4D6E-9F2A-1C3D5E7F8A9B}.Debug|x64.Build.0 = Debug|x64
 		{8A9B0F1E-4B5C-4D6E-9F2A-1C3D5E7F8A9B}.Release|x64.ActiveCfg = Release|x64
 		{8A9B0F1E-4B5C-4D6E-9F2A-1C3D5E7F8A9B}.Release|x64.Build.0 = Release|x64
+		{B2C7D3E4-5F6A-7B8C-9D0E-1F2A3B4C5D6E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B2C7D3E4-5F6A-7B8C-9D0E-1F2A3B4C5D6E}.Debug|x64.Build.0 = Debug|Any CPU
+		{B2C7D3E4-5F6A-7B8C-9D0E-1F2A3B4C5D6E}.Release|x64.ActiveCfg = Release|Any CPU
+		{B2C7D3E4-5F6A-7B8C-9D0E-1F2A3B4C5D6E}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

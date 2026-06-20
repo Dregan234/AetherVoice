@@ -41,6 +41,7 @@ public sealed class Plugin : IAsyncDalamudPlugin
     private TTSManager? ttsManager;
     private NaelQuotes naelQuotes;
     private Dictionary<string, string> naelQuotesDictionary = new();
+    private string helperExePath = "";
 
     public Plugin()
     {
@@ -71,7 +72,9 @@ public sealed class Plugin : IAsyncDalamudPlugin
 
         LoadQuotesDictionary();
 
-        ttsManager = new TTSManager(Configuration, Log);
+        var pluginDir = PluginInterface.AssemblyLocation.DirectoryName!;
+        helperExePath = Path.Combine(pluginDir, "AudioHelper", "AetherVoice.AudioHelper.exe");
+        ttsManager = new TTSManager(Configuration, Log, helperExePath);
 
         await Framework.Run(() =>
         {
@@ -251,7 +254,7 @@ public sealed class Plugin : IAsyncDalamudPlugin
     public void ReloadTTSManager()
     {
         ttsManager?.Dispose();
-        ttsManager = new TTSManager(Configuration, Log);
+        ttsManager = new TTSManager(Configuration, Log, helperExePath);
     }
 
     public void ToggleConfigUi() => ConfigWindow.Toggle();

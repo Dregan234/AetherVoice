@@ -25,4 +25,16 @@
     <EmbeddedResource Include="NaelQuotes.json" />
   </ItemGroup>
 
+  <Target Name="BuildAndCopyHelper" AfterTargets="Build">
+    <MSBuild Projects="..\AetherVoice.AudioHelper\AetherVoice.AudioHelper.csproj"
+             Targets="Build"
+             Properties="Configuration=$(Configuration)" />
+    <ItemGroup>
+      <HelperFiles Include="..\AetherVoice.AudioHelper\bin\$(Configuration)\net48\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(HelperFiles)"
+          DestinationFolder="$(TargetDir)AudioHelper\%(RecursiveDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
+
 </Project>
