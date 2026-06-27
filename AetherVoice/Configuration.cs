@@ -45,6 +45,10 @@ public class Configuration : IPluginConfiguration
     // Custom TTS triggers
     public List<CustomTrigger> CustomTriggers { get; set; } = new();
 
+    // Triggernometry triggers
+    public bool EnableTriggernometryTriggers { get; set; } = true;
+    public List<TriggernometryTrigger> TriggernometryTriggers { get; set; } = new();
+
     // The below exists just to make saving less cumbersome
     public void Save()
     {
@@ -67,4 +71,14 @@ public class CustomTrigger
     public string SoundFilePath { get; set; } = "";
     public bool Enabled { get; set; } = true;
     public bool UseExactMatch { get; set; } = false;
+}
+
+[Serializable]
+public class TriggernometryTrigger
+{
+    public string Name { get; set; } = "";
+    public string RegularExpression { get; set; } = "";
+    public string ResponseText { get; set; } = "";
+    public string SoundFilePath { get; set; } = "";
+    public bool Enabled { get; set; } = true;
 }

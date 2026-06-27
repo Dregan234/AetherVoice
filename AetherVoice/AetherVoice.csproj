@@ -28,7 +28,7 @@
   <Target Name="BuildAndCopyHelper" AfterTargets="Build">
     <MSBuild Projects="..\AetherVoice.AudioHelper\AetherVoice.AudioHelper.csproj"
              Targets="Build"
-             Properties="Configuration=$(Configuration)" />
+             Properties="Configuration=$(Configuration);RuntimeIdentifier=;Platform=AnyCPU" />
     <ItemGroup>
       <HelperFiles Include="..\AetherVoice.AudioHelper\bin\$(Configuration)\net48\**\*" />
     </ItemGroup>
